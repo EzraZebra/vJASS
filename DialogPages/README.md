@@ -1,4 +1,5 @@
- - Create a dialog with automatic pages
+[->Hive Workshop](https://www.hiveworkshop.com/threads/dialogpages.315169/)
+- Create a dialog with automatic pages
  - Optionally show an index page
  - Automatic Next/Previous/Back/Cancel buttons
 
