@@ -1,0 +1,3 @@
+ - Oil resource script created specifically for [Warcraft 2: The Remake](https://www.hiveworkshop.com/threads/warcraft-2-the-remake.293076/)
+ - Only the local player has oil and has oil costs charged
+ - Replicates native resource behaviour as closely as possible
