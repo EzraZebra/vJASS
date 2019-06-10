@@ -1,2 +1,0 @@
-# vJASS
-My vJASS scripts
