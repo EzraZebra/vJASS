@@ -72,7 +72,8 @@
 //  *   boolean DialogPSetButton    (integer dialogId, integer buttonId, string text, integer hotkey)
 //      boolean DialogPSetQuitButton(integer dialogId, integer buttonId, boolean doScoreScreen, string text, integer hotkey)
 //          - Set (quit) button (doScoreScreen), text and hotkey
-//          - Can both be used on quit buttons
+//          - Can both be used on regular and quit buttons
+//          -- Using SetQuitButton on a regular button will turn it into a quit button
 //          - Returns false if the dialog or button wasn't found
 //
 //  *   string DialogPGetButtonText(integer dialogId, integer buttonId)
@@ -94,8 +95,9 @@
 //
 //      * INDEX BUTTONS *
 //      -----------------
-//  *   boolean DialogPSetIndexButton(integer dialogId, integer buttonId, string text, integer hotkey)
+//  *   boolean DialogPSetIndexButton(integer dialogId, integer pageId, string text, integer hotkey)
 //          - Set index button text and hotkey
+//          - Text and hotkey will be saved even if page doesn't (yet) exist
 //          - Returns false if the dialog wasn't found
 //
 //      * CONFIG VARIABLES *
