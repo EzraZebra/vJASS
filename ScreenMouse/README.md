@@ -5,7 +5,9 @@
  - Get mouse button up/down state
  - Note that coordinates go from right to left (X) and bottom to top (Y)
  
- ### Issues (probably not possible to fix)
+ ### Issues
+ - Data is not synced (may cause desyncs in multiplayer)
+ #### Probably not possible to fix:
  - Results are distorted by the FoV (X-axis differences are smaller at the top of the screen than at the bottom)
  - Only accurate on flat terrain
  
