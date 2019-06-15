@@ -22,8 +22,8 @@
 - DifX/Y, DifX/Y_s and RelX/Y now only updated when TriggerPlayer == LocalPlayer
 - Getting player with GetTriggerPlayer() instead of saving trigger/player associations
 - Registration limits removed, except:
--- each trigger/player combination can only be registered once
--- each buttonTrigger/player combination can have only one associated moveTrigger
+- - each trigger/player combination can only be registered once
+- - each buttonTrigger/player combination can have only one associated moveTrigger
 - Misc improvements/changes
 
 ### v1.0.3
