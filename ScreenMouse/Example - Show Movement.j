@@ -1,57 +1,54 @@
 function ShowMovement takes nothing returns boolean
     local string strDif = ""
-
-    if SMGetDifX(0) > 0 then
+    local integer pid = GetPlayerId(GetTriggerPlayer())
+    
+    if SMGetDifX(pid) > 0 then
         set strDif = "Left"
-    elseif SMGetDifX(0) < 0 then
+    elseif SMGetDifX(pid) < 0 then
         set strDif = "Right"
     endif
 
-    if SMGetDifY(0) < 0 then
+    if SMGetDifY(pid) < 0 then
         set strDif = strDif+" Up"
-    elseif SMGetDifY(0) > 0 then
+    elseif SMGetDifY(pid) > 0 then
         set strDif = strDif+" Down"
     endif
 
-    if SMIsLeftDown(0) then
-        if SMIsRightDown(0) then
+    if SMIsLeftDown(pid) then
+        if SMIsRightDown(pid) then
             set strDif = "|cffff0000"+strDif+"|r"
         else
             set strDif = "|cff00ff00"+strDif+"|r"
         endif
-    elseif SMIsRightDown(0) then
+    elseif SMIsRightDown(pid) then
         set strDif = "|cff0000ff"+strDif+"|r"
     endif
 
-    call BJDebugMsg(strDif)
-
-    return false
-endfunction
-
-function StartMoveTrig takes nothing returns boolean
-    if IsTriggerEnabled(gg_trg_ScreenMouse_Example) then
-        call DisableTrigger(gg_trg_ScreenMouse_Example)
+    if strDif == "" then
+        call BJDebugMsg("none")
     else
-        call EnableTrigger(gg_trg_ScreenMouse_Example)
+        call BJDebugMsg(strDif)
     endif
 
     return false
 endfunction
 
-function Trig_ScreenMouse_Example_Actions takes nothing returns nothing
-    local trigger trgArrow = CreateTrigger()
+function ShowMovement_Actions takes nothing returns nothing
+    local trigger trgMoveP1 = CreateTrigger()
+    local trigger trgMoveP2 = CreateTrigger()
 
-    call SMRegisterPlayerDrag(CreateTrigger(), gg_trg_ScreenMouse_Example, Player(0), true, true, true)
-    call TriggerAddCondition(gg_trg_ScreenMouse_Example, function ShowMovement)
-
-    call TriggerRegisterPlayerEvent(trgArrow, Player(0), EVENT_PLAYER_ARROW_DOWN_DOWN)
-    call TriggerAddCondition(trgArrow, function StartMoveTrig)
-
-    set trgArrow = null
+    call SMRegisterPlayerDrag(CreateTrigger(), trgMoveP1, Player(0), true, true, true)
+    call TriggerAddCondition(trgMoveP1, function ShowMovement)
+    call SMRegisterPlayerDrag(CreateTrigger(), trgMoveP2, Player(1), true, true, true)
+    call TriggerAddCondition(trgMoveP2, function ShowMovement)
+    
+    set trgMoveP1 = null
+    set trgMoveP2 = null
 endfunction
 
 //===========================================================================
-function InitTrig_ScreenMouse_Example takes nothing returns nothing
-    set gg_trg_ScreenMouse_Example = CreateTrigger()
-    call TriggerAddAction(gg_trg_ScreenMouse_Example, function Trig_ScreenMouse_Example_Actions)
+function InitTrig_ShowMovement takes nothing returns nothing
+    set gg_trg_ShowMovement = CreateTrigger()
+
+    call TriggerAddAction(gg_trg_ShowMovement, function ShowMovement_Actions)
 endfunction
