@@ -1,13 +1,16 @@
 //===========================================================================
 //
-//  Screen Mouse v1.1.1
+//  Screen Mouse v1.1.2
 //  by loktar
 //  -------------------------------------------------------------------------
 // * Determine direction of mousemovement on screen
 // * Get the mouse position on screen, relative to center
 // * Get mouse button up/down state
 // * Note that coordinates go from right to left (X) and bottom to top (Y)
-// * Limitation: inaccurate when mouse is not on map geometry (filtered by default)
+// * LIMITATIONS:
+// * * Cursor must be on map geometry
+// * * Results are distorted on non-flat terrain
+// * * Relative position is distorted by Field of View (x values are smaller at the top of the screen than at the bottom)
 //  -------------------------------------------------------------------------
 //
 //    -------
@@ -88,15 +91,18 @@
 library ScreenMouse initializer InitScreenMouse
     globals
         private constant real R90 = Deg2Rad(90)
+        
+        private gamecache gcSM = InitGameCache("ScreenMouse.w3v")
+        private constant string DIFX   = "difx"
+        private constant string DIFY   = "dify"
+        private constant string DIFX_S = "difxs"
+        private constant string DIFY_S = "difys"
+        private constant string RELX   = "relx"
+        private constant string RELY   = "rely"
+        
         private hashtable htbSM = InitHashtable()
         private constant key X
         private constant key Y
-        private constant key DIFX
-        private constant key DIFY
-        private constant key DIFX_S
-        private constant key DIFY_S
-        private constant key RELX
-        private constant key RELY
         private constant key LEFT_DOWN
         private constant key RIGHT_DOWN
         private constant key DO_LEFT
@@ -118,7 +124,8 @@ library ScreenMouse initializer InitScreenMouse
 //==== MOUSE FUNCS ==============================================================
 //===============================================================================
     //==== Compensate angles and save ====
-    private function SaveScreenDif takes real difX, real difY, integer pId, integer keyX, integer keyY returns nothing
+    //==== ! This function should only be called locally ! ====
+    private function SaveScreenDif takes real difX, real difY, string keyP, string keyX, string keyY returns nothing
         local real field
         local real tmpX
  
@@ -137,8 +144,10 @@ library ScreenMouse initializer InitScreenMouse
         // Compensate AoA
         set difY = Sin(-GetCameraField(CAMERA_FIELD_ANGLE_OF_ATTACK))*difY
  
-        call SaveReal(htbSM, pId, keyX, difX)
-        call SaveReal(htbSM, pId, keyY, difY)
+        call StoreReal(gcSM, keyP, keyX, difX)
+        call StoreReal(gcSM, keyP, keyY, difY)
+        call SyncStoredReal(gcSM, keyP, keyX)
+        call SyncStoredReal(gcSM, keyP, keyY)
     endfunction
     //========
  
@@ -153,78 +162,75 @@ library ScreenMouse initializer InitScreenMouse
         local real newX
         local real newY
         local real realTmp
+        local real realTmp2
         local player plr = GetTriggerPlayer()
-        local integer pId
-        local trigger trg = null
-        local integer hIdMove
+        local integer pId = GetPlayerId(plr)
+        local trigger trg = GetTriggeringTrigger()
+        local integer hIdMove = GetHandleId(trg)
+        local boolean success = false
+        local string keyP
  
-        if plr == GetLocalPlayer() then
-            set pId = GetPlayerId(plr)
-            set plr = null
-            set trg = GetTriggeringTrigger()
-            set hIdMove = GetHandleId(trg)
+        if HaveSavedBoolean(htbSM, pId, hIdMove) and LoadBoolean(htbSM, pId, hIdMove) then
+            call DisableTrigger(trg)
      
-            if HaveSavedBoolean(htbSM, pId, hIdMove) and LoadBoolean(htbSM, pId, hIdMove) then
-                call DisableTrigger(trg)
-         
-                set newX = BlzGetTriggerPlayerMouseX()
-                set newY = BlzGetTriggerPlayerMouseY()
-         
-                // Make sure we have valid initial mouse position
-                if not HaveSavedReal(htbSM, pId, X) or not IsValidPosition(LoadReal(htbSM, pId, X), LoadReal(htbSM, pId, Y)) then
+            set newX = BlzGetTriggerPlayerMouseX()
+            set newY = BlzGetTriggerPlayerMouseY()
+            
+            if IsValidPosition(newX, newY) then
+                if not HaveSavedReal(htbSM, pId, X) or not HaveSavedReal(htbSM, pId, Y) then
                     call SaveReal(htbSM, pId, X, newX)
                     call SaveReal(htbSM, pId, Y, newY)
-                    call SaveReal(htbSM, pId, DIFX, 0)
-                    call SaveReal(htbSM, pId, DIFY, 0)
-                    call SaveReal(htbSM, pId, DIFX_S, 0)
-                    call SaveReal(htbSM, pId, DIFY_S, 0)
-                    return false
-             
-                elseif IsValidPosition(newX, newY) then
-                    set realTmp = LoadReal(htbSM, pId, X)-newX
+                else
+                    set realTmp = LoadReal(htbSM, pId, X)
+                    set realTmp2 = LoadReal(htbSM, pId, Y)
                     call SaveReal(htbSM, pId, X, newX)
-                    set newX = realTmp
-                    set realTmp = LoadReal(htbSM, pId, Y)-newY
                     call SaveReal(htbSM, pId, Y, newY)
-                    set newY = realTmp
-             
-                    // Compensate Distance
-                    set realTmp = GetCameraField(CAMERA_FIELD_TARGET_DISTANCE)
-                    if realTmp > SM_distMpl then
-                        set newX = newX/realTmp*SM_distMpl
-                        set newY = newY/realTmp*SM_distMpl
-                    endif
-             
-                    // Compensate FoV
-                    set realTmp = GetCameraField(CAMERA_FIELD_FIELD_OF_VIEW)
-                    if realTmp > SM_fovMpl then
-                        set newX = newX/realTmp*SM_fovMpl
-                        set newY = newY/realTmp*SM_fovMpl
-                    endif
-             
-                    call SaveReal(htbSM, pId, DIFX_S, newX)
-                    call SaveReal(htbSM, pId, DIFY_S, newY)
-             
-                    call SaveScreenDif(newX, newY, pId, DIFX, DIFY)
-                endif
+                    
+                    if IsValidPosition(realTmp, realTmp2) and plr == GetLocalPlayer() then
+                        set newX = realTmp-newX
+                        set newY = realTmp2-newY
          
-                call EnableTrigger(trg)
-         
-                set trg = null
-         
-                return true
-            endif
-     
-            call SaveReal(htbSM, pId, DIFX, 0)
-            call SaveReal(htbSM, pId, DIFY, 0)
-            call SaveReal(htbSM, pId, DIFX_S, 0)
-            call SaveReal(htbSM, pId, DIFY_S, 0)
-            set trg = null
-        else
-            set plr = null
+                        // Compensate Distance
+                        set realTmp = GetCameraField(CAMERA_FIELD_TARGET_DISTANCE)
+                        if realTmp > SM_distMpl then
+                            set newX = newX/realTmp*SM_distMpl
+                            set newY = newY/realTmp*SM_distMpl
+                        endif
+                 
+                        // Compensate FoV
+                        set realTmp = GetCameraField(CAMERA_FIELD_FIELD_OF_VIEW)
+                        if realTmp > SM_fovMpl then
+                            set newX = newX/realTmp*SM_fovMpl
+                            set newY = newY/realTmp*SM_fovMpl
+                        endif
+                 
+                        set keyP = I2S(pId)
+                        call StoreReal(gcSM, keyP, DIFX_S, newX)
+                        call StoreReal(gcSM, keyP, DIFY_S, newY)
+                        call SyncStoredReal(gcSM, keyP, DIFX_S)
+                        call SyncStoredReal(gcSM, keyP, DIFY_S)
+                        call SaveScreenDif(newX, newY, keyP, DIFX, DIFY)
+                        
+                        set success = true
+                    endif // saved valid & local player
+                endif // have saved
+            endif // new valid
+            
+            call EnableTrigger(trg)
+        endif // move enabled for player
+ 
+        if not success then
+            set keyP = I2S(pId)
+            call StoreReal(gcSM, keyP, DIFX, 0)
+            call StoreReal(gcSM, keyP, DIFY, 0)
+            call StoreReal(gcSM, keyP, DIFX_S, 0)
+            call StoreReal(gcSM, keyP, DIFY_S, 0)
         endif
+        
+        set plr = null
+        set trg = null
  
-        return false // trigger/player combo is disabled or not local player
+        return success // trigger/player combo is enabled and local player?
     endfunction
     //========
  
@@ -234,18 +240,15 @@ library ScreenMouse initializer InitScreenMouse
         local integer pId = GetPlayerId(plr)
         local integer hIdBtn = GetHandleId(GetTriggeringTrigger())
         local mousebuttontype mouseBtn
-        local boolean isLocal
         local real mouseX
         local real mouseY
         local integer p_hBtnId
         local trigger moveTrg = null
         local integer hIdMove
         local boolean enable
- 
+        
         if HaveSavedBoolean(htbSM, pId, hIdBtn) and LoadBoolean(htbSM, pId, hIdBtn) then
             set mouseBtn = BlzGetTriggerPlayerMouseButton()
-            set isLocal = plr == GetLocalPlayer()
-            set plr = null
             set mouseX = BlzGetTriggerPlayerMouseX()
             set mouseY = BlzGetTriggerPlayerMouseY()
      
@@ -259,8 +262,8 @@ library ScreenMouse initializer InitScreenMouse
                 endif
          
                 // Set relative position
-                if isLocal and IsValidPosition(mouseX, mouseY) then
-                    call SaveScreenDif(GetCameraTargetPositionX()-mouseX, GetCameraTargetPositionY()-mouseY, pId, RELX, RELY)
+                if IsValidPosition(mouseX, mouseY) and plr == GetLocalPlayer() then
+                    call SaveScreenDif(GetCameraTargetPositionX()-mouseX, GetCameraTargetPositionY()-mouseY, I2S(pId), RELX, RELY)
                 endif
          
             // Mouse Up
@@ -271,42 +274,40 @@ library ScreenMouse initializer InitScreenMouse
             endif
      
             // Enable/Disable Drag
-            if isLocal then
-                set p_hBtnId = pId+hIdBtn*100
+            set p_hBtnId = pId+hIdBtn*100
+     
+            if HaveSavedHandle(htbSM, p_hBtnId, TRG_MOVE) then
+                set moveTrg = LoadTriggerHandle(htbSM, p_hBtnId, TRG_MOVE)
+                set hIdMove = GetHandleId(moveTrg)
          
-                if HaveSavedHandle(htbSM, p_hBtnId, TRG_MOVE) then
-                    set moveTrg = LoadTriggerHandle(htbSM, p_hBtnId, TRG_MOVE)
-                    set hIdMove = GetHandleId(moveTrg)
-             
-                    if HaveSavedBoolean(htbSM, pId, hIdMove) and LoadBoolean(htbSM, pId, hIdMove) then
-                        set enable = LoadBoolean(htbSM, pId, RIGHT_DOWN)
-                        if LoadBoolean(htbSM, pId, LEFT_DOWN) then
-                            set enable = (enable and LoadBoolean(htbSM, p_hBtnId, DO_BOTH)) or (not enable and LoadBoolean(htbSM, p_hBtnId, DO_LEFT))
-                        else
-                            set enable = enable and LoadBoolean(htbSM, p_hBtnId, DO_RIGHT)
-                        endif
-                 
-                        if enable then
-                            // Enable Move trigger
-                            if not IsTriggerEnabled(moveTrg) then
-                                call SaveReal(htbSM, pId, X, mouseX)
-                                call SaveReal(htbSM, pId, Y, mouseY)
-                                call EnableTrigger(moveTrg)
-                            endif
-                        else
-                            call DisableTrigger(moveTrg)
-                        endif
+                if HaveSavedBoolean(htbSM, pId, hIdMove) and LoadBoolean(htbSM, pId, hIdMove) then
+                    set enable = LoadBoolean(htbSM, pId, RIGHT_DOWN)
+                    if LoadBoolean(htbSM, pId, LEFT_DOWN) then
+                        set enable = (enable and LoadBoolean(htbSM, p_hBtnId, DO_BOTH)) or (not enable and LoadBoolean(htbSM, p_hBtnId, DO_LEFT))
+                    else
+                        set enable = enable and LoadBoolean(htbSM, p_hBtnId, DO_RIGHT)
                     endif
              
-                    set moveTrg = null
+                    if enable then
+                        // Enable Move trigger
+                        if not IsTriggerEnabled(moveTrg) then
+                            call SaveReal(htbSM, pId, X, mouseX)
+                            call SaveReal(htbSM, pId, Y, mouseY)
+                            call EnableTrigger(moveTrg)
+                        endif
+                    else
+                        call DisableTrigger(moveTrg)
+                    endif
                 endif
+         
+                set moveTrg = null
             endif
      
-            return true
-        else
             set plr = null
+            return true
         endif
  
+        set plr = null
         return false // trigger/player combo is disabled
     endfunction
     //===========================================================================
@@ -455,8 +456,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get difX ====
     function SMGetDifX takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, DIFX) then
-            return LoadReal(htbSM, playerId, DIFX)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, DIFX) then
+            return GetStoredReal(gcSM, keyP, DIFX)
         endif
         return 0.0
     endfunction
@@ -464,8 +466,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get difY ====
     function SMGetDifY takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, DIFY) then
-            return LoadReal(htbSM, playerId, DIFY)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, DIFY) then
+            return GetStoredReal(gcSM, keyP, DIFY)
         endif
         return 0.0
     endfunction
@@ -473,8 +476,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get difXs ====
     function SMGetDifXs takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, DIFX_S) then
-            return LoadReal(htbSM, playerId, DIFX_S)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, DIFX_S) then
+            return GetStoredReal(gcSM, keyP, DIFX_S)
         endif
         return 0.0
     endfunction
@@ -482,8 +486,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get difYs ====
     function SMGetDifYs takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, DIFY_S) then
-            return LoadReal(htbSM, playerId, DIFY_S)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, DIFY_S) then
+            return GetStoredReal(gcSM, keyP, DIFY_S)
         endif
         return 0.0
     endfunction
@@ -509,8 +514,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get Relative X ====
     function SMGetRelX takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, RELX) then
-            return LoadReal(htbSM, playerId, RELX)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, RELX) then
+            return GetStoredReal(gcSM, keyP, RELX)
         endif
         return 0.0
     endfunction
@@ -518,8 +524,9 @@ library ScreenMouse initializer InitScreenMouse
  
     // ==== Get Relative Y ====
     function SMGetRelY takes integer playerId returns real
-        if HaveSavedReal(htbSM, playerId, RELY) then
-            return LoadReal(htbSM, playerId, RELY)
+        local string keyP = I2S(playerId)
+        if HaveStoredReal(gcSM, keyP, RELY) then
+            return GetStoredReal(gcSM, keyP, RELY)
         endif
         return 0.0
     endfunction

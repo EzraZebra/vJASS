@@ -4,14 +4,15 @@
  - Get the mouse position on screen, relative to center
  - Get mouse button up/down state
  - Note that coordinates go from right to left (X) and bottom to top (Y)
- 
- ### Issues
- - Data is not synced (may cause desyncs in multiplayer)
- #### Probably not possible to fix:
- - Results are distorted by the FoV (X-axis differences are smaller at the top of the screen than at the bottom)
- - Only accurate on flat terrain
+ - LIMITATIONS:
+ - - Cursor must be on map geometry
+ - - Results are distorted on non-flat terrain
+ - - Relative position is distorted by Field of View (x values are smaller at the top of the screen than at the bottom)
  
  # Changelog
+ ### v1.1.2
+- Data is now synced (there should not be any desyncs)
+ 
  ### v1.1.1
 - Now setting DifX/Y and DifX/Y_s to 0 when move trigger is run with invalid mouse position or when disabled with SMEnablePlayerMove
 

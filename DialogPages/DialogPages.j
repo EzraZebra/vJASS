@@ -107,8 +107,8 @@
 //          - Does not include Next, Previous, Back or Cancel buttons
 //          - Default: 5
 //
-//  *   string DP_strNext, DP_strPrev, DP_strBack, DP_strCancel
-//      integer DP_hkNext, DP_hkPrev, DP_hkBack, DP_hkCancel
+//  *   string  DP_strNext,  DP_strPrev,  DP_strBack,  DP_strCancel
+//      integer DP_hkNext,   DP_hkPrev,   DP_hkBack,   DP_hkCancel
 //      boolean DP_showNext, DP_showPrev, DP_showBack, DP_showCancel
 //          - Default settings for Next, Previous, Back and Cancel buttons
 //          - Text: "Next >", "< Previous", "< Back", "Cancel"
