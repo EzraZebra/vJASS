@@ -7,12 +7,12 @@
  - LIMITATIONS:
  - - Cursor must be on map geometry
  - - Results are distorted on non-flat terrain
- - - Relative position is distorted by Field of View (x values are smaller at the top of the screen than at the bottom)
+ - - Relative position is distorted by Field of View (x values are larger at the top of the screen than at the bottom)
  
  # Changelog
  ### v1.1.2
 - Data is now synced (there should not be any desyncs)
- 
+
  ### v1.1.1
 - Now setting DifX/Y and DifX/Y_s to 0 when move trigger is run with invalid mouse position or when disabled with SMEnablePlayerMove
 
