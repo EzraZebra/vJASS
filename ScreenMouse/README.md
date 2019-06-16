@@ -5,6 +5,7 @@
  - Get mouse button up/down state
  - Note that coordinates go from right to left (X) and bottom to top (Y)
  - LIMITATIONS:
+ - - _In most cases direction of mousemovement should be reasonably accurate despite these_
  - - Cursor must be on map geometry
  - - Results are distorted on non-flat terrain
  - - Relative position is distorted by Field of View (x values are larger at the top of the screen than at the bottom)
