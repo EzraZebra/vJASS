@@ -5,10 +5,10 @@
  - Get mouse button up/down state
  - Note that coordinates go from right to left (X) and bottom to top (Y)
  - LIMITATIONS:
- - - _In most cases direction of mousemovement should be reasonably accurate despite these_
- - - Cursor must be on map geometry
- - - Results are distorted on non-flat terrain
- - - Relative position is distorted by Field of View (x values are larger at the top of the screen than at the bottom)
+   - _In most cases direction of mousemovement should be reasonably accurate despite these_
+   - Cursor must be on map geometry
+   - Results are distorted on non-flat terrain
+   - Relative position is distorted by Field of View (x values are larger at the top of the screen than at the bottom)
  
  # Changelog
  ### v1.1.2
@@ -24,8 +24,8 @@
 - DifX/Y, DifX/Y_s and RelX/Y now only updated when TriggerPlayer == LocalPlayer
 - Getting player with GetTriggerPlayer() instead of saving trigger/player associations
 - Registration limits removed, except:
-- - each trigger/player combination can only be registered once
-- - each buttonTrigger/player combination can have only one associated moveTrigger
+  - each trigger/player combination can only be registered once
+  - each buttonTrigger/player combination can have only one associated moveTrigger
 - Misc improvements/changes
 
 ### v1.0.3
