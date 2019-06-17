@@ -1,5 +1,5 @@
 [->Hive Workshop](https://www.hiveworkshop.com/threads/dialogpages.315169/)
-- Create a dialog with automatic pages
+ - Create a dialog with automatic pages
  - Optionally show an index page
  - Automatic Next/Previous/Back/Cancel buttons
 
@@ -12,20 +12,20 @@
 ### v1.0.2
  - DialogPDisplay and DialogPDestroy now take dialogId instead of dialog handle as argument
  - DialogPCreate:
- - - Added argument: boolean showIndex
- - - Now returns dialogId instead of dialog handle
- - - Fixed hashtable reference leak
+   - Added argument: boolean showIndex
+   - Now returns dialogId instead of dialog handle
+   - Fixed hashtable reference leak
  - DialogPGetClickedId now returns DP_NONE instead of DP_NOT_FOUND if no button has been clicked yet
  - DialogPAddButton now returns DP_NOT_FOUND instead of -1 if dialog isn't found
  - Index is now only shown when number of buttons > buttons per page
  - New functions:
- - - DialogPSetButtonsPP
- - - DialogPSetButtonsText, DialogPSetButtonsHotkey, DialogPDisplayButtons
- - - DialogPGetHandle
- - - DialogPAddQuitButton, DialogPSetQuitButton
+   - DialogPSetButtonsPP
+   - DialogPSetButtonsText, DialogPSetButtonsHotkey, DialogPDisplayButtons
+   - DialogPGetHandle
+   - DialogPAddQuitButton, DialogPSetQuitButton
  - Functions renamed:
- - - DialogPSetPageIndex -> DialogPSetPage
- - - DialogPSetIndexPageIndex -> DialogPSetIndexPage
+   - DialogPSetPageIndex -> DialogPSetPage
+   - DialogPSetIndexPageIndex -> DialogPSetIndexPage
  - Removed global variable: DP_showIndex
 
 ### v1.0.1 (small update)
