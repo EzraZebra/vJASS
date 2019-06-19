@@ -135,7 +135,7 @@ library OilResource initializer InitOilResource
     //==== Refinery Filter ====
     private function RefineryFltr takes nothing returns boolean
         local unit fltrUnit = GetFilterUnit()
-        local boolean r = GetUnitState(fltrUnit, UNIT_STATE_LIFE) > 0 and HaveSavedBoolean(htbOil, DROPOFFS, GetUnitTypeId(fltrUnit))
+        local boolean r = GetUnitState(fltrUnit, UNIT_STATE_LIFE) > 0 and HaveSavedBoolean(htbOil, REFINERIES, GetUnitTypeId(fltrUnit))
         set fltrUnit = null
         return r
     endfunction
